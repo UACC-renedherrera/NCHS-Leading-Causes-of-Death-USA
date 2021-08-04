@@ -7,20 +7,24 @@ library(janitor)
 # source citation ----
 # 
 
+# notes about the data:
+# https://www.cdc.gov/nchs/data/dvs/Multiple-Cause-Record-Layout-2019-508.pdf 
+
 # 
 # set values
-url <- "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Datasets/DVS/mortality/mort2019us.zip"
-path_zip <- "data/raw"
-path_unzip <- "data/raw/mort2019us"
-zip_file <- "mort2019us.zip"
-# use curl to download
-curl::curl_download(url, destfile = paste(path_zip, zip_file, sep = "/"))
-# set value
-zipped_file <- "data/raw/mort2019us.zip"
-# unzip to folder
-unzip(zipped_file, exdir = path_unzip)
+# url <- "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Datasets/DVS/mortality/mort2019us.zip"
+# path_zip <- "data/raw"
+# path_unzip <- "data/raw/mort2019us"
+# zip_file <- "mort2019us.zip"
+# # use curl to download
+# curl::curl_download(url, destfile = paste(path_zip, zip_file, sep = "/"))
+# # set value
+# zipped_file <- "data/raw/mort2019us.zip"
+# # unzip to folder
+# unzip(zipped_file, exdir = path_unzip)
 
-mort_2019 <- read_fwf( #n_max = 100, 
+# read
+mort_2019 <- read_fwf( n_max = 500, 
   file = "data/raw/mort2019us/VS19MORT.DUSMCPUB_r20210304",
   col_positions = fwf_cols(month = c(65,66), 
                            sex = c(69,69), 
@@ -30,6 +34,37 @@ mort_2019 <- read_fwf( #n_max = 100,
                            hispanic = c(484, 486),
                            race = c(489,490)),
   col_types = c("cfccccc"))
+
+# inspect 
+glimpse(mort_2019)
+
+# month
+mort_2019 %>%
+  count(month, sort = TRUE)
+
+# sex 
+mort_2019 %>%
+  count(sex, sort = TRUE)
+
+# age
+mort_2019 %>%
+  count(age, sort = TRUE)
+
+# cause
+mort_2019 %>%
+  count(cause, sort = TRUE)
+
+# hispanic
+mort_2019 %>%
+  count(hispanic, sort = TRUE)
+
+# race
+mort_2019 %>%
+  count(race, sort = TRUE)
+
+####
+# still figuring out if the read data is correct
+####
 
 mort_2019 <- mort_2019 %>%
   mutate(month_name = if_else(month == "01", "Jan", 
@@ -46,13 +81,14 @@ mort_2019 <- mort_2019 %>%
                                                                                                          if_else(month == "12", "Dec", "")))))))))))))
 
 mort_2019 <- mort_2019 %>%
-  mutate(cause_name = if_else(cause == "04", "Malignant neoplasms", 
+  mutate(cause_name = if_else(cause == "04", "Malignant neoplasms",
                               if_else(cause == "18", "Major cardiovascular diseases",
                                       if_else(cause == "17", "Alzheimer's disease",
                                               if_else(cause == "28", "CLRD", 
                                                       if_else(cause == "38", "Motor vehicle accidents",
                                                               if_else(cause == "39", "All other and unspecified accidents and adverse effects",
-                                                                      if_else(cause == "40", "Intentional self-harm (suicide)", "Other"))))))))
+                                                                      if_else(cause == "40", "Intentional self-harm (suicide)", 
+                                                                              if_else(cause ="")))))))))
 
 mort_2019 <- mort_2019 %>%
   mutate(race_name = if_else(race == "01", "White",
@@ -65,6 +101,8 @@ mort_2019 <- mort_2019 %>%
 # explore 
 glimpse(mort_2019)
 
+
 mort_2019 %>%
-  group_by(cause_name) %>%
-  summarise(count = n())
+  count(cause, sort = TRUE)
+  group_by(cause) %>%
+  summarise(count = n()) 
